@@ -1,0 +1,12 @@
+/* add task css */
+.button {
+  background-color: #947307;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+/* center the button */
+  display: block;
+  margin: 0 auto;
+}
