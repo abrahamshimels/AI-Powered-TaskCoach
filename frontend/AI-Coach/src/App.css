@@ -1,12 +1,70 @@
-/* add task css */
+/* Global styles for AI Task Coach */
+
+.app {
+  min-height: 100vh;
+}
+
+/* Button styles */
 .button {
-  background-color: #947307;
+  background: linear-gradient(45deg, #64b5f6, #42a5f5);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 6px;
   cursor: pointer;
-/* center the button */
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.button:hover {
+  background: linear-gradient(45deg, #42a5f5, #2196f3);
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Form styles */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
   display: block;
-  margin: 0 auto;
+  margin-bottom: 5px;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background-color: #333;
+  color: #e0e0e0;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #64b5f6;
+  box-shadow: 0 0 8px rgba(100, 181, 246, 0.3);
+}
+
+/* Error messages */
+.error-message {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid #f44336;
+  border-radius: 5px;
+  padding: 8px;
+  margin-top: 5px;
+  font-size: 0.9rem;
 }

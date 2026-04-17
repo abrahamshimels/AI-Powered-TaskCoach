@@ -1,4 +1,4 @@
-import { askGeminiService } from "../services/ai.service.js";
+import { askAIService } from "../services/ai.service.js";
 import {
   createTaskService,
   updateTaskService,
@@ -9,13 +9,17 @@ import {
 // 1️⃣ GENERAL AI RESPONSE
 export const askAI = async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, text } = req.body;
+    const message = prompt || text;
 
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt is required" });
+    if (!message) {
+      return res.status(400).json({ error: "Prompt or text is required" });
     }
 
-    const reply = await askGeminiService(prompt);
+    const reply = await askAIService(message, {
+      openRouterMode: "chat",
+      openRouterModel: process.env.OPENROUTER_CHAT_MODEL,
+    });
 
     res.status(200).json({ reply });
   } catch (err) {
@@ -30,8 +34,8 @@ export const aiCreateTask = async (req, res) => {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: "Text is required" });
 const now = new Date();
-    // Call Gemini
-    const aiResponse = await askGeminiService(`
+    // Call AI provider
+    const aiResponse = await askAIService(`
 Convert the following text into STRICT JSON for a task.
 The JSON MUST ONLY include these fields:
 - title (short, concise)
@@ -43,7 +47,10 @@ The JSON MUST ONLY include these fields:
 Do NOT include any extra text, explanations, or comments.
 
 User text: "${text}"
-    `);
+    `, {
+      openRouterMode: "chat",
+      openRouterModel: process.env.OPENROUTER_CHAT_MODEL,
+    });
 
     console.log("AI raw response:", aiResponse);
 
@@ -102,7 +109,7 @@ export const aiUpdateTask = async (req, res) => {
     console.log("Existing tasks:", tasks);
 
     // Call Gemini to generate the update JSON
-    const aiTaskUpdate = await askGeminiService(`
+    const aiTaskUpdate = await askAIService(`
 Based on the following user's instruction, generate STRICT JSON containing ONLY the fields that should be updated in an existing task.
 Allowed fields: id, title, description, priority, status, due_date, created_by_ai.
 
@@ -119,7 +126,10 @@ Allowed fields: id, title, description, priority, status, due_date, created_by_a
 - Boolean or string values must be valid (e.g., priority: "low"|"medium"|"high", status: "pending"|"in-progress"|"completed").
 
 User instruction: "${text}"
-`);
+`, {
+      openRouterMode: "chat",
+      openRouterModel: process.env.OPENROUTER_CHAT_MODEL,
+    });
 
     console.log("AI raw response:", aiTaskUpdate);
 
@@ -192,7 +202,7 @@ export const aiDeleteTask = async (req, res) => {
     const now = new Date();
 
     // Ask AI which task(s) to delete
-    const aiTaskDelete = await askGeminiService(`
+    const aiTaskDelete = await askAIService(`
 You are a task management assistant. Based on the user's instruction, select the task(s) to delete.
 - Tasks: ${JSON.stringify(tasks)}
 - Current date/time: ${now.toISOString().slice(0, 19).replace("T", " ")}
@@ -200,7 +210,10 @@ You are a task management assistant. Based on the user's instruction, select the
 - Return STRICT JSON with only the "id" field of the task(s) to delete.
 - Do NOT include any explanations or extra text.
 - Example: { "id": 123 } or { "ids": [123, 456] }
-`);
+`, {
+      openRouterMode: "chat",
+      openRouterModel: process.env.OPENROUTER_CHAT_MODEL,
+    });
 
     console.log("AI raw response:", aiTaskDelete);
 
@@ -264,8 +277,13 @@ export const aiTaskCoach = async (req, res) => {
 
     const now = new Date();
 
+    console.log("[AI Task Coach] User text:", text);
+    console.log("[AI Task Coach] Task count:", tasks.length);
+
+    console.log("[AI Task Coach] Task count:", tasks.length);
+
     // Call Gemini to generate analysis based on all tasks
-    const aiAnalysis = await askGeminiService(`
+    const aiAnalysis = await askAIService(`
 You are a productivity assistant. Based on the user's instruction, analyze the user's tasks below and provide a helpful response.
 - Tasks: ${JSON.stringify(tasks)}
 - Current date/time: ${now.toISOString().slice(0, 19).replace("T", " ")}
@@ -277,7 +295,10 @@ Update
 Delete
 ) for that 
 - Respond with actionable insights, summaries, or lists of tasks as appropriate.
-`);
+`, {
+      openRouterMode: "chat",
+      openRouterModel: process.env.OPENROUTER_CHAT_MODEL,
+    });
 
     console.log("AI raw analysis:", aiAnalysis);
 

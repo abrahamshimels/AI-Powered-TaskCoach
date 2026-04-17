@@ -37,6 +37,11 @@ app.use(
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(`[Request] ${req.method} ${req.originalUrl} body= ${JSON.stringify(req.body)} headers= ${req.headers.authorization ? 'Bearer token' : 'none'}`);
+  next();
+});
+
 // Basic route
 app.get("/", (req, res) => {
   res.send("Express server is running!");

@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { AuthContext } from "../../context/AuthContext";
 import {
   askAI,
   createTaskAI,
@@ -12,6 +14,8 @@ import {
 import "./Chatbox.css";
 
 const AIChatWithActions = () => {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [action, setAction] = useState("analysis");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -28,6 +32,34 @@ const AIChatWithActions = () => {
     scrollToBottom();
   }, [messages, loading]);
 
+  useEffect(() => {
+    if (!user) {
+      setMessages([
+        {
+          sender: "ai",
+          text: "👋 Welcome to AI Task Coach! To start chatting and managing your tasks, please [login](/login) or [sign up](/signup).",
+          isMarkdown: true,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    } else if (messages.length === 0) {
+      setMessages([
+        {
+          sender: "ai",
+          text: "👋 Hello! I'm your AI Productivity Coach. How can I help you with your tasks today?",
+          isMarkdown: false,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    }
+  }, [user]);
+
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -39,6 +71,12 @@ const AIChatWithActions = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return;
+
+    if (!user) {
+      // Not authenticated, redirect to login
+      navigate("/login");
+      return;
+    }
 
     const userMessage = {
       sender: "user",
@@ -199,6 +237,7 @@ const AIChatWithActions = () => {
               key={index}
               className="quick-action-btn"
               onClick={() => handleQuickAction(qa)}
+              disabled={!user}
               style={{ "--action-color": getActionColor(qa.action) }}
             >
               <span className="quick-action-icon">
@@ -212,7 +251,7 @@ const AIChatWithActions = () => {
 
       {/* MESSAGES */}
       <div className="messages-container">
-        {messages.length === 0 && (
+        {messages.length === 0 && user && (
           <div className="welcome-message">
             <div className="welcome-icon">🎯</div>
             <h3>Welcome to Your AI Coach!</h3>
@@ -308,6 +347,7 @@ const AIChatWithActions = () => {
               key={opt}
               className={`action-btn ${action === opt ? "active" : ""}`}
               onClick={() => setAction(opt)}
+              disabled={!user}
               style={{
                 "--action-color": getActionColor(opt),
                 "--action-color-light": getActionColor(opt) + "20",
@@ -326,16 +366,21 @@ const AIChatWithActions = () => {
           <textarea
             ref={inputRef}
             className="modern-textarea"
-            placeholder={`What would you like to ${action}? (Press Enter to send, Shift+Enter for new line)`}
+            placeholder={
+              user
+                ? `What would you like to ${action}? (Press Enter to send, Shift+Enter for new line)`
+                : "Please login to start chatting with your AI coach"
+            }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             rows="1"
+            disabled={!user}
           />
           <button
             className="send-button"
             onClick={handleSend}
-            disabled={loading || !input.trim()}
+            disabled={loading || !input.trim() || !user}
           >
             {loading ? (
               <div className="send-spinner"></div>
