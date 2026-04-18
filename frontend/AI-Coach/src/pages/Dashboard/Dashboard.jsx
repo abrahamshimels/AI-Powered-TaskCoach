@@ -6,6 +6,11 @@ import ChatBox from "../../components/Chatbox/Chatbox.jsx";
 
 export default function Dashboard() {
   const [showCreate, setShowCreate] = useState(false);
+  const [taskDisplayMode, setTaskDisplayMode] = useState("normal");
+
+  const handleTaskDisplayMode = (mode) => {
+    setTaskDisplayMode((prevMode) => (prevMode === mode ? "normal" : mode));
+  };
 
   return (
     <div className="dashboard">
@@ -16,9 +21,38 @@ export default function Dashboard() {
 
       <div className="dashboard-content">
         {/* Left Panel - Tasks */}
-        <div className="tasks-panel">
+        <div
+          className={`tasks-panel ${taskDisplayMode === "full" ? "task-full-screen" : taskDisplayMode === "half" ? "task-half-screen" : ""}`}
+        >
           <div className="tasks-header">
-            <h2>Your Tasks</h2>
+            <div className="tasks-header-left">
+              <h2>Your Tasks</h2>
+              <div className="task-mode-controls">
+                <button
+                  className={`mode-btn ${taskDisplayMode === "half" ? "active" : ""}`}
+                  onClick={() => handleTaskDisplayMode("half")}
+                  title="Focus mode"
+                >
+                  ▤
+                </button>
+                <button
+                  className={`mode-btn ${taskDisplayMode === "full" ? "active" : ""}`}
+                  onClick={() => handleTaskDisplayMode("full")}
+                  title="Full screen"
+                >
+                  ⛶
+                </button>
+                {taskDisplayMode !== "normal" && (
+                  <button
+                    className="mode-btn close-btn"
+                    onClick={() => setTaskDisplayMode("normal")}
+                    title="Exit focus"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
             <button
               className="btn-create-task"
               onClick={() => setShowCreate(!showCreate)}

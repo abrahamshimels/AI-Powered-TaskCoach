@@ -21,8 +21,101 @@ const AIChatWithActions = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [displayMode, setDisplayMode] = useState("normal");
+  const [chatPosition, setChatPosition] = useState({ x: 40, y: 60 });
+  const [chatSize, setChatSize] = useState({ width: 680, height: 760 });
+  const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
+  const chatBoxRef = useRef(null);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const resizeOriginRef = useRef({ x: 0, y: 0 });
+  const positionRef = useRef({ x: 40, y: 60 });
+  const sizeRef = useRef({ width: 680, height: 760 });
+  const rafRef = useRef(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  const handleDisplayMode = (mode) => {
+    setDisplayMode((prevMode) => (prevMode === mode ? "normal" : mode));
+  };
+
+  const startDrag = (event) => {
+    if (displayMode !== "custom" || event.button !== 0) return;
+    event.preventDefault();
+    setDragging(true);
+    dragOffsetRef.current = {
+      x: event.clientX - positionRef.current.x,
+      y: event.clientY - positionRef.current.y,
+    };
+  };
+
+  const startResize = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    setResizing(true);
+    resizeOriginRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  useEffect(() => {
+    const updateFrame = () => {
+      if (chatBoxRef.current && displayMode === "custom") {
+        const { x, y } = positionRef.current;
+        const { width, height } = sizeRef.current;
+        chatBoxRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        chatBoxRef.current.style.width = `${width}px`;
+        chatBoxRef.current.style.height = `${height}px`;
+      }
+      rafRef.current = null;
+    };
+
+    const scheduleUpdate = () => {
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(updateFrame);
+      }
+    };
+
+    const handlePointerMove = (event) => {
+      if (displayMode !== "custom") return;
+      if (dragging) {
+        const x = Math.max(16, event.clientX - dragOffsetRef.current.x);
+        const y = Math.max(16, event.clientY - dragOffsetRef.current.y);
+        positionRef.current = { x, y };
+        setChatPosition({ x, y });
+        scheduleUpdate();
+      }
+
+      if (resizing) {
+        const width = Math.max(420, sizeRef.current.width + (event.clientX - resizeOriginRef.current.x));
+        const height = Math.max(520, sizeRef.current.height + (event.clientY - resizeOriginRef.current.y));
+        resizeOriginRef.current = { x: event.clientX, y: event.clientY };
+        sizeRef.current = { width, height };
+        setChatSize({ width, height });
+        scheduleUpdate();
+      }
+    };
+
+    const handlePointerUp = () => {
+      if (dragging) setDragging(false);
+      if (resizing) setResizing(false);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [displayMode, dragging, resizing]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -207,10 +300,28 @@ const AIChatWithActions = () => {
     inputRef.current?.focus();
   };
 
+  const customStyle =
+    displayMode === "custom"
+      ? {
+          left: 0,
+          top: 0,
+          transform: `translate3d(${chatPosition.x}px, ${chatPosition.y}px, 0)`,
+          width: chatSize.width,
+          height: chatSize.height,
+        }
+      : {};
+
   return (
-    <div className="modern-chatbox">
+    <div
+      ref={chatBoxRef}
+      className={`modern-chatbox ${displayMode === "full" ? "full-screen" : displayMode === "half" ? "half-screen" : displayMode === "custom" ? "custom-mode" : ""}`}
+      style={customStyle}
+    >
       {/* HEADER */}
-      <div className="chatbox-header glassmorphism">
+      <div
+        className="chatbox-header glassmorphism"
+        onPointerDown={displayMode === "custom" ? startDrag : undefined}
+      >
         <div className="header-content">
           <div className="ai-avatar">
             <div className="avatar-pulse"></div>
@@ -223,9 +334,43 @@ const AIChatWithActions = () => {
             </p>
           </div>
         </div>
-        <div className="status-indicator">
-          <div className="status-dot"></div>
-          <span>Online</span>
+        <div className="header-actions">
+          <div className="display-mode-controls">
+            <button
+              className={`mode-btn ${displayMode === "half" ? "active" : ""}`}
+              onClick={() => handleDisplayMode("half")}
+              title="Focus mode"
+            >
+              <span>▤</span>
+            </button>
+            <button
+              className={`mode-btn ${displayMode === "full" ? "active" : ""}`}
+              onClick={() => handleDisplayMode("full")}
+              title="Full screen"
+            >
+              <span>⛶</span>
+            </button>
+            <button
+              className={`mode-btn ${displayMode === "custom" ? "active" : ""}`}
+              onClick={() => handleDisplayMode("custom")}
+              title="Floating custom mode"
+            >
+              <span>⤢</span>
+            </button>
+            {displayMode !== "normal" && (
+              <button
+                className="mode-btn close-btn"
+                onClick={() => setDisplayMode("normal")}
+                title="Exit expanded mode"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="status-indicator">
+            <div className="status-dot"></div>
+            <span>Online</span>
+          </div>
         </div>
       </div>
 
@@ -406,6 +551,13 @@ const AIChatWithActions = () => {
             {input.length > 0 && `${input.length} characters`}
           </span>
         </div>
+        {displayMode === "custom" && (
+          <div
+            className="resize-handle"
+            onMouseDown={startResize}
+            title="Drag to resize chat window"
+          />
+        )}
       </div>
     </div>
   );

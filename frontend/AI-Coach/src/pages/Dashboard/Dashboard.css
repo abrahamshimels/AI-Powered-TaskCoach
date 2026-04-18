@@ -47,6 +47,45 @@
   overflow: hidden;
 }
 
+.tasks-panel.task-full-screen,
+.tasks-panel.task-half-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  padding: 20px;
+  border-radius: 0;
+  background: linear-gradient(145deg, #111827, #1f2937);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+}
+
+.tasks-panel.task-half-screen {
+  top: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 55vh;
+  width: min(95vw, 900px);
+  border-radius: 24px;
+}
+
+.tasks-panel.task-full-screen .tasks-header,
+.tasks-panel.task-half-screen .tasks-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+}
+
+.tasks-panel.task-full-screen .tasks-list-section,
+.tasks-panel.task-half-screen .tasks-list-section {
+  flex: 1;
+  min-height: 0;
+}
+
 .tasks-header {
   display: flex;
   justify-content: space-between;
@@ -54,6 +93,52 @@
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid #444;
+}
+
+.tasks-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-mode-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.mode-btn.active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.mode-btn.close-btn {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.mode-btn.close-btn:hover {
+  background: rgba(244, 63, 94, 0.24);
 }
 
 .tasks-header h2 {
@@ -91,12 +176,23 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
   border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 55vh;
+  overflow: hidden;
+}
+
+.create-task-section .create-task-container {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .tasks-list-section {
   flex: 1;
   overflow-y: auto;
   padding-right: 10px;
+  min-height: 0;
 }
 
 .tasks-list-section::-webkit-scrollbar {
