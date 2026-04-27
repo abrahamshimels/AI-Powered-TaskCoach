@@ -65,7 +65,7 @@ export default function Dashboard() {
           {/* Conditionally render CreateTask */}
           {showCreate && (
             <div className="create-task-section">
-              <CreateTask />
+              <CreateTask onTaskCreated={() => setShowCreate(false)} />
             </div>
           )}
 
