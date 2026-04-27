@@ -16,6 +16,7 @@ const defaultOrigins = [
   "http://127.0.0.1:5173",
   "http://localhost:5174",
   "http://127.0.0.1:5174",
+  "https://ai-powered-task-coach.vercel.app",
 ];
 
 // Comma-separated env var, e.g. CORS_ORIGINS=http://localhost:5173,https://app.example.com
