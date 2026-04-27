@@ -19,29 +19,41 @@ const defaultOrigins = [
   "https://ai-powered-task-coach.vercel.app",
 ];
 
+const normalizeOrigin = (origin) => origin?.replace(/\/$/, "");
+
 // Comma-separated env var, e.g. CORS_ORIGINS=http://localhost:5173,https://app.example.com
 const allowedOrigins = (
   process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+    ? process.env.CORS_ORIGINS.split(",").map((origin) => normalizeOrigin(origin.trim()))
     : defaultOrigins
 ).filter(Boolean);
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin(origin, callback) {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true); // origin allowed
-      } else {
-        callback(new Error(`Not allowed by CORS: ${origin}`));
-      }
-    },
-    credentials: true, // allow cookies or auth headers
-    methods: ["GET", "POST", "PUT", "DELETE"]
-  })
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+      return;
+    }
+
+    console.warn(`[CORS] Blocked origin: ${normalizedOrigin}`);
+    callback(new Error(`Not allowed by CORS: ${normalizedOrigin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+  optionsSuccessStatus: 204,
+};
+
+app.use(
+  cors(corsOptions)
 );
+
+app.options("*", cors(corsOptions));
 
 
 app.use(express.json());
