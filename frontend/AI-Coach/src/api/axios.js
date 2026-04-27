@@ -1,8 +1,10 @@
 import axios from "axios";
 
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL;
+
 const api = axios.create({
-  baseURL: "http://localhost:5000/api", // your backend base URL
-  withCredentials: true, // optional
+  baseURL: apiBaseURL,
+  withCredentials: true,
 });
 
 // Add token to headers automatically
