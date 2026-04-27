@@ -11,11 +11,19 @@ dotenv.config();
 
 const app = express();
 
-// List of allowed origins
-const allowedOrigins = [
-  "http://localhost:5173", // Vite dev
-  "https://your-production-domain.com" // production
+const defaultOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174",
 ];
+
+// Comma-separated env var, e.g. CORS_ORIGINS=http://localhost:5173,https://app.example.com
+const allowedOrigins = (
+  process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+    : defaultOrigins
+).filter(Boolean);
 
 app.use(
   cors({
@@ -26,7 +34,7 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         callback(null, true); // origin allowed
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error(`Not allowed by CORS: ${origin}`));
       }
     },
     credentials: true, // allow cookies or auth headers
@@ -73,5 +81,5 @@ app.use("/api/task", taskRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
+  console.log(`Server running on http://localhost:${PORT}. Allowed CORS origins: ${allowedOrigins.join(", ")}`)
 );

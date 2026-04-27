@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { AuthContext } from "../../context/AuthContext";
+import { TASKS_QUERY_KEY } from "../../services/TaskService";
 import {
   askAI,
   createTaskAI,
@@ -16,6 +18,7 @@ import "./Chatbox.css";
 const AIChatWithActions = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [action, setAction] = useState("analysis");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -112,6 +115,10 @@ const AIChatWithActions = () => {
           break;
         default:
           res = await askAI(input);
+      }
+
+      if (["add", "update", "delete"].includes(action)) {
+        await queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
       }
 
       const aiText =

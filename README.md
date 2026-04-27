@@ -22,77 +22,77 @@ The frontend uses React Query for task fetching/mutation caching, loading states
 - JWT-based register/login flow with password hashing.
 - User-scoped task CRUD endpoints.
 - AI task create from natural language:
-	- Converts user text into strict JSON task fields.
-	- Normalizes priority/status/due_date before DB insert.
+  - Converts user text into strict JSON task fields.
+  - Normalizes priority/status/due_date before DB insert.
 - AI task update from natural language:
-	- Reads current user tasks.
-	- Requests structured JSON containing fields to update and task id.
+  - Reads current user tasks.
+  - Requests structured JSON containing fields to update and task id.
 - AI task delete from natural language:
-	- Requests task id or ids from AI and deletes matching user tasks.
+  - Requests task id or ids from AI and deletes matching user tasks.
 - AI task coaching/analysis based on the current task list.
 - Dashboard task board with dynamic due-date labeling and categorization:
-	- Due Soon (next 6 hours), Due Today, Due This Week, Due This Month, Later, No Deadline.
-	- Overdue detection and sorting priority.
-	- Live countdown refresh and animated transitions.
+  - Due Soon (next 6 hours), Due Today, Due This Week, Due This Month, Later, No Deadline.
+  - Overdue detection and sorting priority.
+  - Live countdown refresh and animated transitions.
 - Task detail view for in-place status/priority/due date edits and task deletion.
 - Route guards:
-	- Protected dashboard/task details for authenticated users.
-	- Redirect authenticated users away from login/signup to home.
+  - Protected dashboard/task details for authenticated users.
+  - Redirect authenticated users away from login/signup to home.
 
 ## Tech Stack
 
 - Frontend
-	- React 19
-	- React Router
-	- Vite
-	- Axios
-	- TanStack React Query
-	- Framer Motion
-	- React Markdown + Prism syntax highlighting
+  - React 19
+  - React Router
+  - Vite
+  - Axios
+  - TanStack React Query
+  - Framer Motion
+  - React Markdown + Prism syntax highlighting
 
 - Backend
-	- Node.js (ES modules)
-	- Express 5
-	- dotenv
-	- bcryptjs
-	- jsonwebtoken
-	- uuid
-	- @google/genai
+  - Node.js (ES modules)
+  - Express 5
+  - dotenv
+  - bcryptjs
+  - jsonwebtoken
+  - uuid
+  - @google/genai
 
 - Database
-	- MySQL
-	- mysql2/promise connection pool
+  - MySQL
+  - mysql2/promise connection pool
 
 - DevOps / Tools
-	- npm workspaces via separate frontend/backend package roots
-	- nodemon for backend development
-	- ESLint (frontend)
+  - npm workspaces via separate frontend/backend package roots
+  - nodemon for backend development
+  - ESLint (frontend)
 
 ## Architecture
 
 Repository structure:
 
 - backend
-	- server.js: app bootstrap, CORS policy, middleware registration, DB init, route mounting.
-	- src/config: DB pool configuration (port/SSL options).
-	- src/database: table creation bootstrap for users/tasks.
-	- src/routes: auth/task/ai route declarations.
-	- src/controllers: HTTP handlers and request validation.
-	- src/services: business logic and provider integration.
-	- src/models: SQL access layer.
-	- src/middleware: JWT authentication middleware.
+  - server.js: app bootstrap, CORS policy, middleware registration, DB init, route mounting.
+  - src/config: DB pool configuration (port/SSL options).
+  - src/database: table creation bootstrap for users/tasks.
+  - src/routes: auth/task/ai route declarations.
+  - src/controllers: HTTP handlers and request validation.
+  - src/services: business logic and provider integration.
+  - src/models: SQL access layer.
+  - src/middleware: JWT authentication middleware.
 
 - frontend/AI-Coach
-	- src/main.jsx: providers (router, auth, theme, query client).
-	- src/routes: route graph and route guards.
-	- src/context: auth and theme context.
-	- src/components:
-		- Header/nav
-		- Chatbox (AI action modes)
-		- Task modules (create/list/detail)
-	- src/services + src/api:
-		- Axios client/interceptor
-		- API service wrappers with normalized error handling.
+  - src/main.jsx: providers (router, auth, theme, query client).
+  - src/routes: route graph and route guards.
+  - src/context: auth and theme context.
+  - src/components:
+    - Header/nav
+    - Chatbox (AI action modes)
+    - Task modules (create/list/detail)
+  - src/services + src/api:
+    - Axios client/interceptor
+    - API service wrappers with normalized error handling.
 
 Interaction model:
 
@@ -110,11 +110,11 @@ Interaction model:
 4. Protected routes become accessible; unauthenticated users are redirected to login.
 5. Dashboard task list queries /api/task using React Query.
 6. For manual task creation:
-	 - CreateTask mutation posts to /api/task.
-	 - On success, tasks query is invalidated and refetched.
+   - CreateTask mutation posts to /api/task.
+   - On success, tasks query is invalidated and refetched.
 7. For AI operations:
-	 - Chatbox posts to /api/ai/task/create, /update, or /delete.
-	 - On success, tasks query is invalidated and refetched.
+   - Chatbox posts to /api/ai/task/create, /update, or /delete.
+   - On success, tasks query is invalidated and refetched.
 8. Task board computes countdown labels and category sections client-side every 30 seconds.
 9. Task details page fetches one task and allows updates/deletion through task endpoints.
 
@@ -128,35 +128,35 @@ Base URL:
 Auth endpoints:
 
 - POST /api/auth/register
-	- Creates user, hashes password, returns JWT + user object.
+  - Creates user, hashes password, returns JWT + user object.
 - POST /api/auth/login
-	- Validates credentials, returns JWT + user object.
+  - Validates credentials, returns JWT + user object.
 
 Task endpoints (all require Bearer JWT):
 
 - POST /api/task
-	- Creates task for authenticated user.
+  - Creates task for authenticated user.
 - GET /api/task
-	- Returns all tasks for authenticated user.
+  - Returns all tasks for authenticated user.
 - GET /api/task/:id
-	- Returns one task if owned by authenticated user.
+  - Returns one task if owned by authenticated user.
 - PUT /api/task/:id
-	- Updates task fields for authenticated user.
+  - Updates task fields for authenticated user.
 - DELETE /api/task/:id
-	- Deletes task for authenticated user.
+  - Deletes task for authenticated user.
 
 AI endpoints (all require Bearer JWT):
 
 - POST /api/ai/ask
-	- General AI response for prompt/text.
+  - General AI response for prompt/text.
 - POST /api/ai/task/create
-	- Natural language to structured task creation.
+  - Natural language to structured task creation.
 - POST /api/ai/task/update
-	- Natural language to structured task update.
+  - Natural language to structured task update.
 - DELETE /api/ai/task/delete
-	- Natural language to task deletion id or ids.
+  - Natural language to task deletion id or ids.
 - POST /api/ai/task/coach
-	- Task analysis/coaching based on current tasks.
+  - Task analysis/coaching based on current tasks.
 
 ## Database Design
 
@@ -194,20 +194,20 @@ Prerequisites:
 
 1. Clone repository and install dependencies
 
-	 - Backend:
+   - Backend:
 
-		 cd backend
-		 npm install
+     cd backend
+     npm install
 
-	 - Frontend:
+   - Frontend:
 
-		 cd ../frontend/AI-Coach
-		 npm install
+     cd ../frontend/AI-Coach
+     npm install
 
 2. Configure environment files
 
-	 - Backend: create backend/.env from backend/.env.example and add values.
-	 - Frontend: create frontend/AI-Coach/.env from frontend/AI-Coach/.env.example.
+   - Backend: create backend/.env from backend/.env.example and add values.
+   - Frontend: create frontend/AI-Coach/.env from frontend/AI-Coach/.env.example.
 
 Backend env keys used by code:
 
@@ -234,13 +234,13 @@ Frontend env keys:
 
 3. Run backend
 
-	 cd backend
-	 npm run dev
+   cd backend
+   npm run dev
 
 4. Run frontend
 
-	 cd frontend/AI-Coach
-	 npm run dev
+   cd frontend/AI-Coach
+   npm run dev
 
 5. Open frontend URL shown by Vite and authenticate.
 
@@ -249,27 +249,27 @@ Frontend env keys:
 Current UI composition from implemented components:
 
 - Home page:
-	- Hero + feature cards.
-	- Embedded chat component.
-	- Redirects authenticated users to dashboard.
+  - Hero + feature cards.
+  - Embedded chat component.
+  - Redirects authenticated users to dashboard.
 
 - Header:
-	- Shows login/signup links for guests.
-	- Shows dashboard + logout for authenticated users.
+  - Shows login/signup links for guests.
+  - Shows dashboard + logout for authenticated users.
 
 - Dashboard:
-	- Left panel: create-task toggle and categorized task board.
-	- Right panel: AI chat with action modes (ask, add, update, delete, analysis).
+  - Left panel: create-task toggle and categorized task board.
+  - Right panel: AI chat with action modes (ask, add, update, delete, analysis).
 
 - Task board:
-	- Category headers and urgency colors.
-	- Skeleton loading, retry error card, background refetch indicator.
-	- Countdown labels and due-date sections update over time.
+  - Category headers and urgency colors.
+  - Skeleton loading, retry error card, background refetch indicator.
+  - Countdown labels and due-date sections update over time.
 
 - Task details:
-	- Editable status/priority/due date.
-	- Progress bar toward due date.
-	- Task deletion action.
+  - Editable status/priority/due date.
+  - Progress bar toward due date.
+  - Task deletion action.
 
 ## Limitations
 
