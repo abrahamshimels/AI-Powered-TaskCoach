@@ -53,7 +53,8 @@ app.use(
   cors(corsOptions)
 );
 
-app.options("*", cors(corsOptions));
+// Express 5 requires named wildcards for catch-all paths.
+app.options("/{*any}", cors(corsOptions));
 
 
 app.use(express.json());
