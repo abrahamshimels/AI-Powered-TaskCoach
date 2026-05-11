@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import dns from "dns/promises";
 import dotenv from "dotenv";
 import aiRoutes from "./src/routes/ai.routes.js";
 import taskRoutes from "./src/routes/task.routes.js";
@@ -71,18 +72,69 @@ app.get("/", (req, res) => {
 
 // Test database connection
 const testDBConnection = async () => {
+  const host = process.env.DB_HOST;
+  const port = process.env.DB_PORT || 3306;
+  console.log(`[DATABASE] Attempting connection to ${host}:${port}...`);
+  
   try {
     const [rows] = await db.query("SELECT 1 + 1 AS result");
-    console.log("✅ MySQL connection successful:", rows[0].result === 2);
+    console.log("✅ [DATABASE] MySQL connection successful");
+    return true;
   } catch (err) {
-    console.error("❌ MySQL connection failed:", err.message);
+    console.error("❌ [DATABASE] MySQL connection failed:", err.message);
+    return false;
+  }
+};
+
+const canResolveDatabaseHost = async (host) => {
+  if (!host) {
+    console.warn("⚠️ [DATABASE] DB_HOST is not configured");
+    return false;
+  }
+
+  if (host === "localhost" || host === "127.0.0.1") {
+    return true;
+  }
+
+  console.log(`[DATABASE] Checking DNS resolution for ${host}...`);
+  try {
+    // Timeout DNS lookup after 3 seconds
+    await Promise.race([
+      dns.lookup(host),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("DNS lookup timeout")), 3000)
+      )
+    ]);
+    console.log(`✅ [DATABASE] DNS resolved ${host}`);
+    return true;
+  } catch (err) {
+    console.warn(`⚠️ [DATABASE] DNS lookup failed for ${host}: ${err.message}`);
+    return false;
   }
 };
 
 // Create tasks table if not exists
 const initializeDatabase = async () => {
-  await testDBConnection();
+  console.log("[DATABASE] Initializing database...");
+  
+  const host = process.env.DB_HOST;
+  const resolvable = await canResolveDatabaseHost(host);
+
+  if (!resolvable) {
+    console.warn(`[DATABASE] Database host not resolvable, skipping table initialization`);
+    return;
+  }
+
+  const connected = await testDBConnection();
+
+  if (!connected) {
+    console.warn("[DATABASE] Could not establish connection, skipping table creation");
+    return;
+  }
+
+  console.log("[DATABASE] Creating tables...");
   await createTables(); // call your table creation function
+  console.log("[DATABASE] Database initialization complete");
 };
 
 // Call it once at server start
@@ -94,6 +146,10 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/task", taskRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}. Allowed CORS origins: ${allowedOrigins.join(", ")}`)
-);
+app.listen(PORT, () => {
+  console.log("\n" + "=".repeat(70));
+  console.log(`✅ [SERVER] Express server started successfully on port ${PORT}`);
+  console.log(`🌐 [SERVER] API available at: http://localhost:${PORT}`);
+  console.log(`📋 [CORS] Allowed origins: ${allowedOrigins.join(", ")}`);
+  console.log("=".repeat(70) + "\n");
+});

@@ -4,6 +4,7 @@ import db from "../config/db.js";
 // Create Users Table
 export const createUsersTable = async () => {
   try {
+    console.log("[TABLE] Creating/checking users table...");
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (
         id CHAR(36) PRIMARY KEY,           -- UUID
@@ -14,15 +15,16 @@ export const createUsersTable = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
-    console.log("✅ Users table created or already exists");
+    console.log("✅ [TABLE] Users table is ready");
   } catch (err) {
-    console.error("❌ Error creating users table:", err.message);
+    console.error("❌ [TABLE] Error with users table:", err.message);
   }
 };
 
 // Create Tasks Table
 export const createTasksTable = async () => {
   try {
+    console.log("[TABLE] Creating/checking tasks table...");
     await db.query(`
       CREATE TABLE IF NOT EXISTS tasks (
         id CHAR(36) PRIMARY KEY,  -- UUID
@@ -38,14 +40,16 @@ export const createTasksTable = async () => {
         CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
       )
     `);
-    console.log("✅ Tasks table created or already exists");
+    console.log("✅ [TABLE] Tasks table is ready");
   } catch (err) {
-    console.error("❌ Error creating tasks table:", err.message);
+    console.error("❌ [TABLE] Error with tasks table:", err.message);
   }
 };
 
 // Run both tables in order
 export const createTables = async () => {
+  console.log("[TABLE] Starting table initialization...");
   await createUsersTable();
   await createTasksTable();
+  console.log("[TABLE] Table initialization complete");
 };

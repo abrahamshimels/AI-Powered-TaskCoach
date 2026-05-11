@@ -8,10 +8,24 @@ import {
 } from "../models/user.model.js";
 import { v4 as uuidv4 } from "uuid"; // for generating UUIDs
 
+const isPasswordStrong = (password = "") =>
+  password.length >= 6 &&
+  /[A-Z]/.test(password) &&
+  /[a-z]/.test(password) &&
+  /\d/.test(password) &&
+  /[^A-Za-z0-9]/.test(password);
+
 // Register a new user
 export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!isPasswordStrong(password)) {
+      return res.status(400).json({
+        error:
+          "Password must be at least 6 characters and include uppercase, lowercase, number, and special character.",
+      });
+    }
 
     // Check if user exists
     const existingUser = await getUserByUsername(username);
@@ -82,5 +96,4 @@ export const login = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-
 

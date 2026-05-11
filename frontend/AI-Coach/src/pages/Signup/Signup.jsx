@@ -5,6 +5,20 @@ import { AuthContext } from "../../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import "./Signup.css";
 
+const passwordRules = [
+  { label: "At least 6 characters", test: (password) => password.length >= 6 },
+  { label: "One uppercase letter", test: (password) => /[A-Z]/.test(password) },
+  { label: "One lowercase letter", test: (password) => /[a-z]/.test(password) },
+  { label: "One number", test: (password) => /\d/.test(password) },
+  {
+    label: "One special character",
+    test: (password) => /[^A-Za-z0-9]/.test(password),
+  },
+];
+
+const isPasswordValid = (password) =>
+  passwordRules.every((rule) => rule.test(password));
+
 const Signup = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -19,6 +33,12 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!isPasswordValid(form.password)) {
+      setError("Password must meet all strength requirements.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await api.post("/auth/register", form);
@@ -72,6 +92,21 @@ const Signup = () => {
               onChange={handleChange}
               required
             />
+            <ul className="password-rules" aria-label="Password requirements">
+              {passwordRules.map((rule) => {
+                const passed = rule.test(form.password);
+
+                return (
+                  <li
+                    key={rule.label}
+                    className={passed ? "valid" : ""}
+                    aria-live="polite"
+                  >
+                    {passed ? "[OK]" : "[ ]"} {rule.label}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
           {error && <div className="error-message">{error}</div>}
           <button type="submit" className="signup-btn" disabled={loading}>
