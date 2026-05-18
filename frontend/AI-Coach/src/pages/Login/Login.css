@@ -4,31 +4,32 @@
   align-items: center;
   min-height: 100vh;
   padding: 20px;
+  color: var(--text-primary);
 }
 
 .login-card {
-  background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+  background: var(--surface-elevated);
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
   padding: 40px;
   width: 100%;
   max-width: 400px;
   text-align: center;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
   max-height: calc(100vh - 60px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .login-card h2 {
-  color: #64b5f6;
+  color: var(--brand-primary);
   margin-bottom: 10px;
   font-size: 2rem;
   font-weight: 600;
 }
 
 .login-card p {
-  color: #b0b0b0;
+  color: var(--text-secondary);
   margin-bottom: 30px;
   font-size: 1rem;
 }
@@ -46,31 +47,31 @@
 .form-group label {
   display: block;
   margin-bottom: 5px;
-  color: #e0e0e0;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .form-group input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #555;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background-color: #333;
-  color: #e0e0e0;
+  background-color: var(--input-bg);
+  color: var(--input-text);
   font-size: 1rem;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #64b5f6;
-  box-shadow: 0 0 10px rgba(100, 181, 246, 0.3);
+  border-color: var(--brand-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .error-message {
-  color: #f44336;
-  background-color: rgba(244, 67, 54, 0.1);
-  border: 1px solid #f44336;
+  color: var(--danger-text);
+  background-color: var(--danger-bg);
+  border: 1px solid rgba(220, 38, 38, 0.3);
   border-radius: 5px;
   padding: 10px;
   margin-bottom: 20px;
@@ -78,7 +79,7 @@
 }
 
 .login-btn {
-  background: linear-gradient(45deg, #64b5f6, #42a5f5);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   padding: 12px;
@@ -91,23 +92,23 @@
 }
 
 .login-btn:hover {
-  background: linear-gradient(45deg, #42a5f5, #2196f3);
+  background: var(--brand-gradient-strong);
   transform: translateY(-2px);
 }
 
 .login-btn:disabled {
-  background: #555;
+  background: var(--surface-muted);
   cursor: not-allowed;
   transform: none;
 }
 
 .signup-link {
-  color: #b0b0b0;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
 .signup-link a {
-  color: #64b5f6;
+  color: var(--brand-primary);
   font-weight: 500;
 }
 

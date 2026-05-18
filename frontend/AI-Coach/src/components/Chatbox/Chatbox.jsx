@@ -15,7 +15,36 @@ import {
 } from "../../services/AIService";
 import "./Chatbox.css";
 
-const AIChatWithActions = () => {
+const normalizeTaskProgress = (task) => {
+  const progress = Number(task?.progress);
+  if (Number.isNaN(progress)) return null;
+  return Math.min(100, Math.max(0, Math.round(progress)));
+};
+
+const buildTaskContext = (task) => {
+  if (!task) return "";
+
+  const progress = normalizeTaskProgress(task);
+  const dueDate = task.due_date
+    ? new Date(task.due_date).toLocaleString()
+    : "No deadline";
+
+  return [
+    `Active task: ${task.title || "Untitled task"}`,
+    task.description ? `Description: ${task.description}` : null,
+    `Status: ${task.status || "unknown"}`,
+    `Progress: ${progress === null ? "Not set" : `${progress}%`}`,
+    `Due date: ${dueDate}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+};
+
+const AIChatWithActions = ({
+  selectedTask = null,
+  onClearSelectedTask,
+  onTaskDrop,
+}) => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -29,6 +58,7 @@ const AIChatWithActions = () => {
   const [chatSize, setChatSize] = useState({ width: 680, height: 760 });
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
+  const [isDropTarget, setIsDropTarget] = useState(false);
   const chatBoxRef = useRef(null);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const resizeOriginRef = useRef({ x: 0, y: 0 });
@@ -188,26 +218,30 @@ const AIChatWithActions = () => {
     setLoading(true);
     setIsTyping(true);
 
+    const requestText = contextualInputPrefix
+      ? `${contextualInputPrefix}\n\nUser request: ${input.trim()}`
+      : input.trim();
+
     try {
       let res;
       switch (action) {
         case "ask":
-          res = await askAI(input);
+          res = await askAI(requestText);
           break;
         case "add":
-          res = await createTaskAI(input);
+          res = await createTaskAI(requestText);
           break;
         case "update":
-          res = await updateTaskAI(input);
+          res = await updateTaskAI(requestText);
           break;
         case "delete":
-          res = await deleteTaskAI(input);
+          res = await deleteTaskAI(requestText);
           break;
         case "analysis":
-          res = await analyzeTasksAI(input);
+          res = await analyzeTasksAI(requestText);
           break;
         default:
-          res = await askAI(input);
+          res = await askAI(requestText);
       }
 
       if (["add", "update", "delete"].includes(action)) {
@@ -307,6 +341,40 @@ const AIChatWithActions = () => {
     inputRef.current?.focus();
   };
 
+  const handleDragOver = (event) => {
+    if (!onTaskDrop) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setIsDropTarget(true);
+  };
+
+  const handleDragLeave = (event) => {
+    if (!onTaskDrop) return;
+    if (event.currentTarget === event.target) {
+      setIsDropTarget(false);
+    }
+  };
+
+  const handleDrop = (event) => {
+    if (!onTaskDrop) return;
+    event.preventDefault();
+    setIsDropTarget(false);
+
+    const rawTask = event.dataTransfer.getData("application/json");
+    if (!rawTask) return;
+
+    try {
+      const task = JSON.parse(rawTask);
+      onTaskDrop(task);
+      setAction("ask");
+      inputRef.current?.focus();
+    } catch {
+      // Ignore malformed task payloads.
+    }
+  };
+
+  const contextualInputPrefix = selectedTask ? buildTaskContext(selectedTask) : "";
+
   const customStyle =
     displayMode === "custom"
       ? {
@@ -321,8 +389,11 @@ const AIChatWithActions = () => {
   return (
     <div
       ref={chatBoxRef}
-      className={`modern-chatbox ${displayMode === "full" ? "full-screen" : displayMode === "half" ? "half-screen" : displayMode === "custom" ? "custom-mode" : ""}`}
+      className={`modern-chatbox ${displayMode === "full" ? "full-screen" : displayMode === "half" ? "half-screen" : displayMode === "custom" ? "custom-mode" : ""} ${isDropTarget ? "is-drop-target" : ""}`}
       style={customStyle}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       {/* HEADER */}
       <div
@@ -383,6 +454,27 @@ const AIChatWithActions = () => {
 
       {/* QUICK ACTIONS */}
       <div className="quick-actions-container">
+        {selectedTask && (
+          <div className="task-context-card">
+            <div className="task-context-copy">
+              <span className="task-context-label">Focused task</span>
+              <strong className="task-context-title">{selectedTask.title}</strong>
+              <span className="task-context-meta">
+                {selectedTask.status || "unknown"}
+                {normalizeTaskProgress(selectedTask) !== null
+                  ? ` · ${normalizeTaskProgress(selectedTask)}%`
+                  : ""}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="task-context-clear"
+              onClick={() => onClearSelectedTask?.()}
+            >
+              Clear
+            </button>
+          </div>
+        )}
         <div className="quick-actions-scroll">
           {quickActions.map((qa, index) => (
             <button
@@ -395,7 +487,7 @@ const AIChatWithActions = () => {
               <span className="quick-action-icon">
                 {getActionIcon(qa.action)}
               </span>
-              {qa.label}
+              <span className="quick-action-label">{qa.label}</span>
             </button>
           ))}
         </div>
@@ -404,12 +496,13 @@ const AIChatWithActions = () => {
       {/* MESSAGES */}
       <div className="messages-container">
         {messages.length === 0 && user && (
-          <div className="welcome-message">
+          <div className={`welcome-message ${isDropTarget ? "drop-target" : ""}`}>
             <div className="welcome-icon">🎯</div>
             <h3>Welcome to Your AI Coach!</h3>
             <p>
-              I'm here to help you manage tasks, track progress, and boost
-              productivity.
+              {selectedTask
+                ? "A task is attached to this chat. Ask a question or request an update about it."
+                : "Drag a task from the dashboard into this panel to focus the conversation."}
             </p>
             <div className="welcome-tips">
               <div className="tip">• Ask for task analysis</div>
@@ -497,7 +590,7 @@ const AIChatWithActions = () => {
           {["ask", "add", "update", "delete", "analysis"].map((opt) => (
             <button
               key={opt}
-              className={`action-btn ${action === opt ? "active" : ""}`}
+              className={`chat-action-btn ${action === opt ? "active" : ""}`}
               onClick={() => setAction(opt)}
               disabled={!user}
               style={{
@@ -505,8 +598,10 @@ const AIChatWithActions = () => {
                 "--action-color-light": getActionColor(opt) + "20",
               }}
             >
-              <span className="action-btn-icon">{getActionIcon(opt)}</span>
-              {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              <span className="chat-action-btn-icon">{getActionIcon(opt)}</span>
+              <span className="chat-action-btn-label">
+                {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              </span>
             </button>
           ))}
         </div>
@@ -520,7 +615,9 @@ const AIChatWithActions = () => {
             className="modern-textarea"
             placeholder={
               user
-                ? `What would you like to ${action}? (Press Enter to send, Shift+Enter for new line)`
+                ? selectedTask
+                  ? `Ask about "${selectedTask.title}" or request an update...`
+                  : `What would you like to ${action}? (Press Enter to send, Shift+Enter for new line)`
                 : "Please login to start chatting with your AI coach"
             }
             value={input}

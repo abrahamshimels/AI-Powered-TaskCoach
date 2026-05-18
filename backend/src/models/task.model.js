@@ -1,6 +1,12 @@
 import db from "../config/db.js";
 import { v4 as uuidv4 } from "uuid";
 
+const normalizeProgress = (value) => {
+  const numberValue = Number(value);
+  if (Number.isNaN(numberValue)) return 0;
+  return Math.min(100, Math.max(0, Math.round(numberValue)));
+};
+
 // CREATE
 export const createTask = async (taskData,user_id) => {
   try {
@@ -9,8 +15,10 @@ export const createTask = async (taskData,user_id) => {
       description,
       priority = "medium",
       status = "pending",
+      progress = 0,
       due_date = null,
       created_by_ai = false,
+      parent_id = null,
     } = taskData;
 
     if (!user_id) throw new Error("User ID is required");
@@ -20,8 +28,8 @@ export const createTask = async (taskData,user_id) => {
     const [result] = await db.query(
       `
       INSERT INTO tasks
-        (id, title, description, priority, status, due_date, created_by_ai, user_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (id, title, description, priority, status, progress, due_date, created_by_ai, parent_id, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         id,
@@ -29,13 +37,15 @@ export const createTask = async (taskData,user_id) => {
         description,
         priority,
         status,
+        normalizeProgress(progress),
         due_date,
         created_by_ai,
+        parent_id,
         user_id,
       ]
     );
 
-    return { id, ...taskData };
+    return { id, ...taskData, parent_id };
   } catch (error) {
     throw new Error("Error creating task: " + error.message);
   }
@@ -93,6 +103,10 @@ export const updateTask = async (id, taskData, user_id) => {
       fields.push("status = ?");
       values.push(taskData.status);
     }
+    if (taskData.progress !== undefined) {
+      fields.push("progress = ?");
+      values.push(normalizeProgress(taskData.progress));
+    }
     if (taskData.due_date !== undefined) {
       fields.push("due_date = ?");
       values.push(taskData.due_date);
@@ -125,5 +139,50 @@ export const deleteTask = async (id, user_id) => {
     return result;
   } catch (error) {
     throw new Error("Error deleting task: " + error.message);
+  }
+};
+
+// GET ALL TASKS NESTED (hierarchical tree)
+export const getAllTasksNested = async (user_id) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM tasks WHERE user_id = ? ORDER BY COALESCE(parent_id, id) ASC, created_at DESC",
+      [user_id]
+    );
+
+    const tasksMap = new Map();
+    const rootTasks = [];
+
+    rows.forEach((task) => {
+      tasksMap.set(task.id, { ...task, children: [] });
+    });
+
+    rows.forEach((task) => {
+      if (task.parent_id) {
+        const parent = tasksMap.get(task.parent_id);
+        if (parent) {
+          parent.children.push(tasksMap.get(task.id));
+        }
+      } else {
+        rootTasks.push(tasksMap.get(task.id));
+      }
+    });
+
+    return rootTasks;
+  } catch (error) {
+    throw new Error("Error fetching nested tasks: " + error.message);
+  }
+};
+
+// GET SUBTASKS
+export const getSubtasks = async (parentId, user_id) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM tasks WHERE parent_id = ? AND user_id = ? ORDER BY created_at DESC",
+      [parentId, user_id]
+    );
+    return rows;
+  } catch (error) {
+    throw new Error("Error fetching subtasks: " + error.message);
   }
 };

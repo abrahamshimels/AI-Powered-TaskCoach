@@ -2,7 +2,7 @@
   padding: 20px;
   max-width: 700px;
   margin: auto;
-  color:#2a3441;
+  color: var(--text-primary);
 }
 
 .back-btn {
@@ -11,14 +11,15 @@
   font-size: 1rem;
   cursor: pointer;
   margin-bottom: 15px;
-  color: #4a90e2;
+  color: var(--brand-primary);
 }
 
 .task-details-card {
-  background: #ffffff;
+  background: var(--surface-elevated);
   padding: 25px;
   border-radius: 16px;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .task-details-title {
@@ -29,34 +30,71 @@
 
 .task-details-desc {
   font-size: 1rem;
-  opacity: 0.85;
+  color: var(--text-secondary);
   margin-bottom: 20px;
 }
 
-/* PROGRESS BAR */
 .progress-container {
   margin-bottom: 20px;
 }
 
+.progress-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 .progress-label {
   font-size: 0.9rem;
-  margin-bottom: 4px;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.progress-unsaved {
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.progress-slider-wrap {
+  position: relative;
+  height: 26px;
+  display: flex;
+  align-items: center;
 }
 
 .progress-bar {
   width: 100%;
   height: 10px;
-  background: #e6e6e6;
+  background: var(--surface-muted);
   border-radius: 20px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4a90e2, #67b0ff);
+  background: var(--brand-gradient);
 }
 
-/* INFO */
+.progress-slider {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 26px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.progress-slider:disabled {
+  cursor: not-allowed;
+}
+
 .task-details-info p {
   margin: 8px 0;
 }
@@ -65,13 +103,74 @@
   margin-left: 10px;
   padding: 5px 8px;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-strong);
+  background: var(--input-bg);
+  color: var(--input-text);
 }
 
-/* DELETE BUTTON */
-.delete-btn {
+.task-details-due-edit {
+  margin: 14px 0;
+}
+
+.task-details-due-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 2fr) repeat(3, minmax(74px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.task-details-due-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.task-details-due-grid input,
+.task-details-due-grid select {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--input-text);
+  background: var(--input-bg);
+}
+
+.task-details-update-message {
+  margin: 14px 0 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-align: center;
+}
+
+.update-btn {
   margin-top: 20px;
-  background: #ff4d4d;
+  background: var(--brand-gradient);
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.update-btn:hover:not(:disabled) {
+  background: var(--brand-gradient-strong);
+}
+
+.update-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.delete-btn {
+  margin-top: 12px;
+  background: linear-gradient(135deg, #ef4444, #f97316);
   color: #fff;
   border: none;
   padding: 12px 16px;
@@ -83,5 +182,17 @@
 }
 
 .delete-btn:hover {
-  background: #e63232;
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+}
+
+@media (max-width: 640px) {
+  .task-details-due-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .status-dropdown {
+    display: block;
+    width: 100%;
+    margin: 8px 0 0;
+  }
 }

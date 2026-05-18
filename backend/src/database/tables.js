@@ -32,6 +32,7 @@ export const createTasksTable = async () => {
         description TEXT,
         priority ENUM('low','medium','high') DEFAULT 'medium',
         status ENUM('pending','in-progress','completed') DEFAULT 'pending',
+        progress TINYINT UNSIGNED DEFAULT 0,
         due_date DATETIME NULL,
         created_by_ai BOOLEAN DEFAULT FALSE,
         user_id CHAR(36) NOT NULL,
@@ -40,6 +41,38 @@ export const createTasksTable = async () => {
         CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
       )
     `);
+
+    const [progressColumns] = await db.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'tasks'
+        AND COLUMN_NAME = 'progress'
+    `);
+
+    if (progressColumns.length === 0) {
+      await db.query(`
+        ALTER TABLE tasks
+        ADD COLUMN progress TINYINT UNSIGNED DEFAULT 0 AFTER status
+      `);
+    }
+
+    const [parentIdColumns] = await db.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'tasks'
+        AND COLUMN_NAME = 'parent_id'
+    `);
+
+    if (parentIdColumns.length === 0) {
+      await db.query(`
+        ALTER TABLE tasks
+        ADD COLUMN parent_id CHAR(36) NULL,
+        ADD CONSTRAINT fk_parent_task FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE ON UPDATE CASCADE
+      `);
+    }
+
     console.log("✅ [TABLE] Tasks table is ready");
   } catch (err) {
     console.error("❌ [TABLE] Error with tasks table:", err.message);

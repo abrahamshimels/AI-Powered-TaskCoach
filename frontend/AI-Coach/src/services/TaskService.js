@@ -1,6 +1,7 @@
 import api from "../api/axios";
 
 export const TASKS_QUERY_KEY = ["tasks"];
+export const TASKS_NESTED_QUERY_KEY = ["tasksNested"];
 
 const getApiErrorMessage = (error, fallbackMessage) => {
   const messageFromApi =
@@ -17,6 +18,24 @@ export const getAllTasks = async () => {
     return res.data;
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Failed to fetch tasks"));
+  }
+};
+
+export const getAllTasksNested = async () => {
+  try {
+    const res = await api.get("/task/nested/all");
+    return res.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, "Failed to fetch nested tasks"));
+  }
+};
+
+export const getSubtasks = async (parentId) => {
+  try {
+    const res = await api.get(`/task/${parentId}/subtasks`);
+    return res.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, "Failed to fetch subtasks"));
   }
 };
 

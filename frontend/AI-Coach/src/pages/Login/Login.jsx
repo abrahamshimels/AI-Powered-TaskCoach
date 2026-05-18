@@ -1,17 +1,25 @@
 // pages/Login.jsx
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import api from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
 
 const Login = () => {
-  const { login } = useContext(AuthContext);
+  const { login, authMessage } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ username: "", password: "" });
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    authMessage || localStorage.getItem("auth-message") || ""
+  );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (authMessage) {
+      setError(authMessage);
+    }
+  }, [authMessage]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,6 +31,7 @@ const Login = () => {
     try {
       const response = await api.post("/auth/login", form);
       login(response.data.user, response.data.token);
+      localStorage.removeItem("auth-message");
       navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.error || "Login failed. Please try again.");

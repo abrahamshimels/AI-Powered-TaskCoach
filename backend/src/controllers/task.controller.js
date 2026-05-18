@@ -2,6 +2,8 @@
 import {
   createTaskService,
   getTasksService,
+  getTasksNestedService,
+  getSubtasksService,
   getTaskService,
   updateTaskService,
   deleteTaskService,
@@ -28,6 +30,26 @@ export const fetchTasks = async (req, res) => {
   try {
     const tasks = await getTasksService(req.user.id);
     res.status(200).json(tasks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET ALL NESTED
+export const fetchTasksNested = async (req, res) => {
+  try {
+    const tasks = await getTasksNestedService(req.user.id);
+    res.status(200).json(tasks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET SUBTASKS
+export const fetchSubtasks = async (req, res) => {
+  try {
+    const subtasks = await getSubtasksService(req.params.id, req.user.id);
+    res.status(200).json(subtasks);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

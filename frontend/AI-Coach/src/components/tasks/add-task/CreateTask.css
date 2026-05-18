@@ -3,9 +3,9 @@
   max-width: 100%;
   margin: 0;
   padding: 1.5rem;
-  background: #f8f9fa;
+  background: var(--surface-elevated);
   border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   font-family: "Inter", sans-serif;
   max-height: 100%;
   min-height: 0;
@@ -19,7 +19,7 @@
 .create-task-container h2 {
   text-align: center;
   margin-bottom: 0.5rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .create-task-form {
@@ -33,7 +33,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .create-task-form input,
@@ -42,18 +42,43 @@
   width: 100%;
   padding: 0.6rem 0.8rem;
   margin-top: 0.3rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   font-size: 0.95rem;
   transition: all 0.2s ease;
+  background: var(--input-bg);
+  color: var(--input-text);
 }
 
 .create-task-form input:focus,
 .create-task-form textarea:focus,
 .create-task-form select:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  border-color: var(--brand-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.create-task-due-fieldset {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.85rem;
+  margin: 0;
+}
+
+.create-task-due-fieldset legend {
+  padding: 0 0.4rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.create-task-due-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 2fr) repeat(3, minmax(74px, 1fr));
+  gap: 0.75rem;
+}
+
+.create-task-due-grid label {
+  margin-bottom: 0;
 }
 
 .create-task-form button {
@@ -62,7 +87,7 @@
   margin-top: 1rem;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #007bff, #00c6ff);
+  background: var(--brand-gradient);
   color: white;
   font-size: 1rem;
   cursor: pointer;
@@ -77,11 +102,11 @@
 
 .create-task-form button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.25);
 }
 
 .error-message {
-  color: red;
+  color: var(--danger-text);
   font-size: 0.9rem;
   margin-top: -0.5rem;
   margin-bottom: 0.5rem;
@@ -106,5 +131,11 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .create-task-due-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

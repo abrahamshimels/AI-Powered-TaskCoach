@@ -2,7 +2,9 @@
 import {
   createTask,
   getAllTasks,
+  getAllTasksNested,
   getTaskById,
+  getSubtasks,
   updateTask,
   deleteTask,
 } from "../models/task.model.js";
@@ -15,6 +17,16 @@ export const createTaskService = async (data,user_id) => {
 // ------- GET ALL -------
 export const getTasksService = async (user_id) => {
   return await getAllTasks(user_id);
+};
+
+// ------- GET ALL NESTED -------
+export const getTasksNestedService = async (user_id) => {
+  return await getAllTasksNested(user_id);
+};
+
+// ------- GET SUBTASKS -------
+export const getSubtasksService = async (parentId, user_id) => {
+  return await getSubtasks(parentId, user_id);
 };
 
 // ------- GET ONE -------

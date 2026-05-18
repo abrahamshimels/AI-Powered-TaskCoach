@@ -1,0 +1,272 @@
+.nested-tasks-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.nested-tasks-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.nested-tasks-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+}
+
+.nested-tasks-subtitle {
+  margin: 0;
+  color: var(--text-secondary, #6b7280);
+  font-size: 1rem;
+}
+
+/* Create Task Section */
+.create-task-section {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.btn-create-new {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-create-new:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.create-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: white;
+  color: var(--text-primary, #1f2937);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.form-input:disabled {
+  background: var(--surface-soft, #f3f4f6);
+  color: var(--text-muted, #9ca3af);
+  cursor: not-allowed;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+.btn-submit,
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-submit {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: var(--surface-soft, #e5e7eb);
+  color: var(--text-secondary, #6b7280);
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: var(--surface-strong, #d1d5db);
+}
+
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tasks Tree Section */
+.tasks-tree-section {
+  min-height: 400px;
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 1rem;
+  padding: 2rem;
+  background: var(--surface-soft, #f3f4f6);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color, #d1d5db);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p,
+.error-state p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.error-state {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: #fee2e2;
+}
+
+.error-title {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.error-message {
+  font-size: 0.9rem;
+  color: #991b1b;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .nested-tasks-view {
+    padding: 1.5rem;
+  }
+
+  .nested-tasks-header {
+    gap: 1.5rem;
+  }
+
+  .nested-tasks-title {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .nested-tasks-view {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .nested-tasks-title {
+    font-size: 1.5rem;
+  }
+
+  .nested-tasks-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .create-task-section {
+    padding: 1rem;
+  }
+
+  .btn-create-new,
+  .btn-submit,
+  .btn-cancel {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .form-actions {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nested-tasks-view {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+
+  .nested-tasks-title {
+    font-size: 1.25rem;
+  }
+
+  .nested-tasks-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .form-input {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .btn-create-new,
+  .btn-submit,
+  .btn-cancel {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    width: 100%;
+  }
+
+  .form-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

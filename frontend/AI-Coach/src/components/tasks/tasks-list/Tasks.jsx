@@ -9,6 +9,7 @@ const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 const DUE_SOON_WINDOW_MS = 6 * HOUR_MS;
+const INITIAL_NOW_TICK = Date.now();
 
 const SECTION_ORDER = [
   "dueSoon",
@@ -45,6 +46,17 @@ const SECTION_META = {
     subtitle: "Tasks without due dates",
   },
 };
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+];
+
+const MotionSection = motion.section;
+const MotionUl = motion.ul;
+const MotionLi = motion.li;
 
 const getTaskDate = (task) => {
   if (!task?.due_date) return null;
@@ -167,6 +179,15 @@ const getStatusProgress = (status) => {
   return 20;
 };
 
+const getTaskProgress = (task) => {
+  const progress = Number(task?.progress);
+  if (!Number.isNaN(progress)) {
+    return Math.min(100, Math.max(0, Math.round(progress)));
+  }
+
+  return getStatusProgress(task?.status);
+};
+
 const TaskBoardSkeleton = () => {
   return (
     <div className="task-skeleton-group" aria-hidden="true">
@@ -187,8 +208,9 @@ const TaskBoardSkeleton = () => {
   );
 };
 
-const Tasks = () => {
-  const [nowTick, setNowTick] = useState(Date.now());
+const Tasks = ({ onTaskDragStart }) => {
+  const [nowTick, setNowTick] = useState(INITIAL_NOW_TICK);
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
 
   const {
@@ -214,6 +236,14 @@ const Tasks = () => {
 
   const now = useMemo(() => new Date(nowTick), [nowTick]);
 
+  const filteredTasks = useMemo(() => {
+    if (statusFilter === "all") return tasks;
+    return tasks.filter((task) => task.status === statusFilter);
+  }, [tasks, statusFilter]);
+
+  const activeFilterLabel =
+    STATUS_FILTERS.find((filter) => filter.value === statusFilter)?.label || "";
+
   const groupedTasks = useMemo(() => {
     const grouped = {
       dueSoon: [],
@@ -224,7 +254,7 @@ const Tasks = () => {
       noDeadline: [],
     };
 
-    tasks.forEach((task) => {
+    filteredTasks.forEach((task) => {
       const section = getCategory(task, now);
       grouped[section].push(task);
     });
@@ -234,7 +264,7 @@ const Tasks = () => {
     });
 
     return grouped;
-  }, [tasks, now]);
+  }, [filteredTasks, now]);
 
   const handleOpenTask = (id) => {
     navigate(`/task/${id}`);
@@ -268,86 +298,134 @@ const Tasks = () => {
 
   return (
     <div className="taskList-container">
-      <h2 className="taskList-title">Your Tasks</h2>
+      <div className="taskList-topbar">
+        <h2 className="taskList-title">Your Tasks</h2>
+        <div className="task-filter-group" aria-label="Filter tasks by status">
+          {STATUS_FILTERS.map((filter) => (
+            <button
+              key={filter.value}
+              className={`task-filter-btn ${
+                statusFilter === filter.value ? "active" : ""
+              }`}
+              type="button"
+              onClick={() => setStatusFilter(filter.value)}
+              aria-pressed={statusFilter === filter.value}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </div>
       {isFetching && <p className="task-refreshing">Refreshing tasks...</p>}
 
-      <AnimatePresence mode="popLayout">
-        {SECTION_ORDER.map((sectionKey) => {
-          const sectionTasks = groupedTasks[sectionKey];
-          if (!sectionTasks.length) return null;
+      {filteredTasks.length === 0 ? (
+        <div className="task-empty-state">
+          <p>
+            No {statusFilter === "all" ? "" : `${activeFilterLabel.toLowerCase()} `}
+            tasks found.
+          </p>
+        </div>
+      ) : (
+        <AnimatePresence mode="popLayout">
+          {SECTION_ORDER.map((sectionKey) => {
+            const sectionTasks = groupedTasks[sectionKey];
+            if (!sectionTasks.length) return null;
 
-          const meta = SECTION_META[sectionKey];
+            const meta = SECTION_META[sectionKey];
 
-          return (
-            <motion.section
-              key={sectionKey}
-              className="task-category"
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-            >
-              <header className="task-category-header">
-                <h3>{meta.title}</h3>
-                <p>{meta.subtitle}</p>
-              </header>
+            return (
+              <MotionSection
+                key={sectionKey}
+                className="task-category"
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <header className="task-category-header">
+                  <h3>{meta.title}</h3>
+                  <p>{meta.subtitle}</p>
+                </header>
 
-              <motion.ul className="taskList-wrapper" layout>
-                <AnimatePresence>
-                  {sectionTasks.map((task) => {
-                    const dueText = getDueLabel(task, now);
-                    const urgencyClass = getUrgencyClass(task, now);
-                    const statusProgress = getStatusProgress(task.status);
+                <MotionUl className="taskList-wrapper" layout>
+                  <AnimatePresence>
+                    {sectionTasks.map((task) => {
+                      const dueText = getDueLabel(task, now);
+                      const urgencyClass = getUrgencyClass(task, now);
+                      const statusProgress = getTaskProgress(task);
 
-                    return (
-                      <motion.li
-                        layout
-                        key={task.id}
-                        className={`task-item urgency-${urgencyClass}`}
-                        onClick={() => handleOpenTask(task.id)}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <div className="task-header">
-                          <h3 className="task-title">{task.title}</h3>
-                          <span className={`task-status status-${task.status}`}>
-                            {task.status}
-                          </span>
-                        </div>
-
-                        {task.description && <p className="task-desc">{task.description}</p>}
-
-                        <div className="task-due-row">
-                          <p className={`task-due task-due-${urgencyClass}`}>{dueText}</p>
-                          {task.due_date && (
-                            <p className="task-deadline-stamp">
-                              {new Date(task.due_date).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="task-progress">
-                          <div className="task-progress-track">
-                            <motion.div
-                              className="task-progress-fill"
-                              initial={false}
-                              animate={{ width: `${statusProgress}%` }}
-                              transition={{ duration: 0.35 }}
-                            />
+                      return (
+                        <MotionLi
+                          layout
+                          key={task.id}
+                          className={`task-item urgency-${urgencyClass}`}
+                          onClick={() => handleOpenTask(task.id)}
+                          draggable
+                          onDragStart={(event) =>
+                            onTaskDragStart?.(task, event)
+                          }
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.98 }}
+                          transition={{ duration: 0.2 }}
+                          title="Drag this task to the chat to focus the conversation"
+                        >
+                          <div className="task-header">
+                            <h3 className="task-title">{task.title}</h3>
+                            <span className={`task-status status-${task.status}`}>
+                              {task.status}
+                            </span>
                           </div>
-                        </div>
-                      </motion.li>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.ul>
-            </motion.section>
-          );
-        })}
-      </AnimatePresence>
+
+                          {task.description && (
+                            <p className="task-desc">{task.description}</p>
+                          )}
+
+                          <div className="task-due-row">
+                            <p className={`task-due task-due-${urgencyClass}`}>
+                              {dueText}
+                            </p>
+                            {task.due_date && (
+                              <p className="task-deadline-stamp">
+                                {new Date(task.due_date).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+
+                          <div
+                            className="task-progress"
+                            style={{ "--task-progress": `${statusProgress}%` }}
+                          >
+                            <div
+                              className="task-progress-track"
+                              aria-label={`Task progress ${statusProgress}%`}
+                            >
+                              <motion.div
+                                className="task-progress-fill"
+                                initial={false}
+                                animate={{ width: `${statusProgress}%` }}
+                                transition={{ duration: 0.35 }}
+                              />
+                            </div>
+                            <span
+                              className={`task-progress-value ${
+                                statusProgress === 100 ? "is-complete" : ""
+                              }`}
+                            >
+                              {statusProgress}%
+                            </span>
+                          </div>
+                        </MotionLi>
+                      );
+                    })}
+                  </AnimatePresence>
+                </MotionUl>
+              </MotionSection>
+            );
+          })}
+        </AnimatePresence>
+      )}
     </div>
   );
 };
